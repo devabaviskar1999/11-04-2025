@@ -35,7 +35,8 @@ export const signup = async (req, res) => {
       }
     }
   } catch (err) {
-    return res.status(400).json({ err: "Something went wrong while: LOGIN" });
+    console.error(err.message);
+    return res.status(500).json({ err: "Something went wrong while: SIGNUP" });
   }
 };
 
@@ -52,9 +53,7 @@ export const login = async (req, res) => {
     }
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Invalid credentials please create account" });
+      return res.status(400).json({ message: "Invalid credentials" });
     } else {
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
@@ -65,12 +64,26 @@ export const login = async (req, res) => {
           _id: user._id,
           fullName: user.fullName,
           email: user.email,
-          profilePic: user.profilePic._id,
+          profilePic: user.profilePic,
         });
       }
     }
-  } catch (err) {}
+  } catch (err) {
+    console.error("Login error", err.message);
+    return res.status(500).json({ err: "Something went wrong while: LOGIN" });
+  }
 };
 export const logout = (req, res) => {
-  return res.send("logout page");
+  try {
+    res.cookie("JWT", "", {
+      maxAge: 0,
+      httpOnly: true, //!prevent xss attacks
+      sameSite: "strict", //!csrf attacks cross-site request forgery attacks
+      secure: process.env.NODE_ENV != "development",
+    });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (err) {
+    console.error("Login error", err.message);
+    return res.status(500).json({ err: "Something went wrong while: LOGIN" });
+  }
 };
