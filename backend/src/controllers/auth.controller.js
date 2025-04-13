@@ -1,5 +1,6 @@
 import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
+import { cloudinary } from "../lib/cloudinary.js";
 import bcrypt from "bcrypt";
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -47,7 +48,9 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "All fields are required!" });
     }
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
     }
     const user = await User.findOne({ email });
     if (!user) {
@@ -83,5 +86,40 @@ export const logout = (req, res) => {
   } catch (err) {
     console.error("Login error", err.message);
     return res.status(500).json({ err: "Something went wrong while: LOGIN" });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { profilePic } = req.body;
+    const userId = req.user._id;
+    if (!profilePic) {
+      return res.status(400).json({ message: "All fields are required!" });
+    }
+    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    const updateUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: uploadResponse.secure_url },
+      { new: true }
+    );
+    //?By default, findOneAndUpdate() returns the document as it was before update was applied. If you set new: true, findOneAndUpdate() will instead give you the object after update was applied.
+    return res.status(200).json(updateUser);
+  } catch (err) {
+    console.error("Error in updateProfile code", err.message);
+    return res
+      .status(500)
+      .json({ err: "Something went wrong while: UPDATE-PROFILE" });
+  }
+};
+
+export const checkAuth = async (req, res) => {
+  try {
+    const user = req.user;
+    return res.status(200).json(user);
+  } catch (err) {
+    console.error("Error in updateProfile code", err.message);
+    return res
+      .status(500)
+      .json({ err: "Something went wrong while: UPDATE-PROFILE" });
   }
 };
