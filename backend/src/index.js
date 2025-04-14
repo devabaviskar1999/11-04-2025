@@ -17,8 +17,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //!Routing
-app.use("/api/auth", authRoute);
-app.use("/api/message", messageRoute);
+app.use("/api/auth", authRoute); //Auth route
+app.use("/api/message", messageRoute); //Message route
 
 //!express server is listening
 app.listen(PORT, () => {
